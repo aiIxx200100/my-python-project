@@ -1,0 +1,83 @@
+# setup_and_test.py
+import os
+import sys
+import subprocess
+import time
+
+print("="*50)
+print("🔧 Setup & Security Test Tool")
+print("="*50)
+
+# ====== ۱. نصب خودکار کتابخونه‌ها ======
+def install_packages():
+    packages = ["requests", "urllib3", "colorama"]
+    for pkg in packages:
+        try:
+            __import__(pkg)
+            print(f"✅ {pkg} already installed")
+        except:
+            print(f"📦 Installing {pkg}...")
+            subprocess.check_call([sys.executable, "-m", "pip", "install", pkg, "--quiet"])
+            print(f"✅ {pkg} installed")
+
+print("\n📦 Installing required packages...")
+install_packages()
+
+# ====== ۲. تست امنیت سایت ======
+import requests
+import ssl
+import socket
+from urllib.parse import urlparse
+import colorama
+from colorama import Fore, Style
+colorama.init(autoreset=True)
+
+def check_security(url):
+    if not url.startswith("http"):
+        url = "https://" + url
+    
+    print(Fore.CYAN + f"\n🔍 Checking security for: {url}")
+    print(Fore.CYAN + "="*50)
+    
+    # SSL Check
+    try:
+        parsed = urlparse(url)
+        hostname = parsed.netloc
+        context = ssl.create_default_context()
+        with socket.create_connection((hostname, 443), timeout=5) as sock:
+            with context.wrap_socket(sock, server_hostname=hostname) as ssock:
+                cert = ssock.getpeercert()
+                print(Fore.GREEN + "✅ SSL Certificate: Valid")
+                print(f"   Expires: {cert.get('notAfter', 'Unknown')}")
+    except:
+        print(Fore.RED + "❌ SSL Certificate: Invalid or missing")
+    
+    # Headers Check
+    try:
+        response = requests.get(url, timeout=5, verify=False)
+        headers = response.headers
+        
+        security_headers = {
+            "Strict-Transport-Security": "HSTS",
+            "Content-Security-Policy": "CSP",
+            "X-Frame-Options": "X-Frame",
+            "X-Content-Type-Options": "X-Content-Type"
+        }
+        
+        print(Fore.YELLOW + "\n📋 Security Headers:")
+        for h, name in security_headers.items():
+            status = Fore.GREEN + "✅" if h in headers else Fore.RED + "❌"
+            print(f"   {status} {name}")
+    except:
+        print(Fore.RED + "❌ Failed to fetch headers")
+    
+    print(Fore.CYAN + "="*50)
+
+# ====== ۳. اجرا ======
+if __name__ == "__main__":
+    print(Fore.GREEN + "\n✅ Setup complete!")
+    site = input(Fore.YELLOW + "\n🌐 Enter website URL (e.g., example.com): ").strip()
+    if site:
+        check_security(site)
+    else:
+        print(Fore.RED + "❌ No URL entered!")
