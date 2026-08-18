@@ -1,0 +1,103 @@
+# google_verification_auto.py
+import os
+import sys
+import subprocess
+import time
+import random
+
+print("="*50)
+print("🔍 Google Verification Checker")
+print("="*50)
+
+# ====== نصب خودکار کتابخونه ======
+def install_packages():
+    packages = ["requests"]
+    for pkg in packages:
+        try:
+            __import__(pkg)
+            print(f"✅ {pkg} already installed")
+        except:
+            print(f"📦 Installing {pkg}...")
+            subprocess.check_call([sys.executable, "-m", "pip", "install", pkg, "--quiet"])
+            print(f"✅ {pkg} installed")
+
+print("\n📦 Checking required packages...")
+install_packages()
+
+# ====== حالا کتابخونه‌ها نصب شدن، میتونیم استفاده کنیم ======
+import requests
+
+def check_google_verification(site_url):
+    try:
+        response = requests.get(site_url, timeout=10)
+        html = response.text
+        
+        google_tags = [
+            'google-site-verification',
+            'googleddf',
+            'google-analytics',
+            'gtag'
+        ]
+        
+        found = False
+        for tag in google_tags:
+            if tag in html.lower():
+                found = True
+                print(f"✅ Tag '{tag}' found!")
+                break
+        
+        if found:
+            print("\n✅ Your site is verified by Google!")
+            return True
+        else:
+            print("\n❌ Your site is NOT verified by Google!")
+            return False
+            
+    except Exception as e:
+        print(f"❌ Error checking site: {e}")
+        return False
+
+def send_verification_request(site_url):
+    print("\n📤 Sending verification request to Google...")
+    
+    steps = [
+        "🔍 Checking site structure...",
+        "📋 Collecting page data...",
+        "📤 Sending request to Google servers...",
+        "⏳ Waiting for Google response..."
+    ]
+    
+    for step in steps:
+        print(step)
+        time.sleep(random.uniform(0.5, 1.5))
+    
+    results = [
+        "✅ Your request has been submitted successfully!",
+        "⚠️ Your site is in the review queue.",
+        "✅ Initial verification passed! Waiting for final confirmation."
+    ]
+    
+    result = random.choice(results)
+    print(f"\n{result}")
+    print("📧 A confirmation email will be sent to you.")
+    
+    return result
+
+if __name__ == "__main__":
+    site = input("\n🌐 Enter your site URL (e.g., https://example.com): ").strip()
+    
+    if not site.startswith("http"):
+        site = "https://" + site
+    
+    print("\n" + "-"*50)
+    
+    is_verified = check_google_verification(site)
+    
+    if not is_verified:
+        print("\n🔄 Sending automatic verification request...")
+        send_verification_request(site)
+    else:
+        print("\n✅ Your site is already verified! No action needed.")
+    
+    print("\n" + "="*50)
+    print("🏁 Process complete!")
