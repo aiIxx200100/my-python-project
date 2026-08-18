@@ -1,0 +1,80 @@
+# creator_info_auto.py
+import os
+import sys
+import subprocess
+import time
+
+print("="*50)
+print("👤 Creator Info Viewer")
+print("="*50)
+
+# ====== نصب خودکار کتابخونه ======
+def install_packages():
+    packages = ["requests"]
+    for pkg in packages:
+        try:
+            __import__(pkg)
+            print(f"✅ {pkg} already installed")
+        except:
+            print(f"📦 Installing {pkg}...")
+            subprocess.check_call([sys.executable, "-m", "pip", "install", pkg, "--quiet"])
+            print(f"✅ {pkg} installed")
+
+print("\n📦 Checking required packages...")
+install_packages()
+
+# ====== حالا کتابخونه‌ها نصب شدن ======
+import requests
+from datetime import datetime
+
+# ====== اطلاعات سازنده ======
+creator_info = {
+    "name": "aiIxx200100",
+    "github": "https://github.com/aiIxx200100",
+    "email": "aiIxx200100@gmail.com",
+    "member_since": "2023",
+    "projects": [
+        "eelua - Roblox Scripts",
+        "Rc7.lua - Dex Script",
+        "Python Security Tools"
+    ],
+    "bio": "Script developer | Roblox | Python | Security"
+}
+
+def fetch_github_info(username):
+    try:
+        url = f"https://api.github.com/users/{username}"
+        response = requests.get(url, timeout=5)
+        if response.status_code == 200:
+            return response.json()
+        return None
+    except:
+        return None
+
+def show_creator_info():
+    print("\n📋 Creator Information")
+    print("-"*30)
+    print(f"👤 Name: {creator_info['name']}")
+    print(f"🔗 GitHub: {creator_info['github']}")
+    print(f"📧 Email: {creator_info['email']}")
+    print(f"📅 Member Since: {creator_info['member_since']}")
+    print(f"📝 Bio: {creator_info['bio']}")
+    
+    print("\n📁 Projects:")
+    for i, project in enumerate(creator_info['projects'], 1):
+        print(f"   {i}. {project}")
+    
+    print("\n🔄 Fetching live GitHub data...")
+    github_data = fetch_github_info(creator_info['name'])
+    if github_data:
+        print(f"📊 Public Repos: {github_data.get('public_repos', 0)}")
+        print(f"⭐ Followers: {github_data.get('followers', 0)}")
+        print(f"👥 Following: {github_data.get('following', 0)}")
+        print(f"📅 Account Created: {github_data.get('created_at', 'Unknown')[:10]}")
+    else:
+        print("⚠️ Could not fetch live GitHub data")
+
+show_creator_info()
+
+print("\n" + "="*50)
+print("🏁 Creator info loaded!")
