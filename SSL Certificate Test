@@ -1,0 +1,79 @@
+# ssl_checker.py
+import requests
+import ssl
+import socket
+import datetime
+from urllib.parse import urlparse
+
+# ====== ۱. بررسی تاریخ انقضای SSL ======
+def check_ssl_expiry(url):
+    try:
+        parsed = urlparse(url)
+        hostname = parsed.netloc
+        context = ssl.create_default_context()
+        with socket.create_connection((hostname, 443), timeout=5) as sock:
+            with context.wrap_socket(sock, server_hostname=hostname) as ssock:
+                cert = ssock.getpeercert()
+                expiry_date = cert.get('notAfter', 'Unknown')
+                if expiry_date != 'Unknown':
+                    expiry = datetime.datetime.strptime(expiry_date, "%b %d %H:%M:%S %Y %Z")
+                    days_left = (expiry - datetime.datetime.now()).days
+                    print(f"📅 SSL Expiry Date: {expiry_date}")
+                    if days_left < 0:
+                        print("❌ SSL Certificate EXPIRED!")
+                    elif days_left < 30:
+                        print(f"⚠️ SSL expires in {days_left} days (soon!)")
+                    else:
+                        print(f"✅ SSL valid for {days_left} more days")
+                return expiry_date
+    except Exception as e:
+        print(f"❌ SSL Check Failed: {e}")
+        return None
+
+# ====== ۲. بررسی وضعیت سایت (بلک‌لیست) ======
+def check_site_status(url):
+    try:
+        # استفاده از VirusTotal API (برای بررسی دقیق‌تر نیاز به API Key داره)
+        # اینجا فقط یه چک ساده با Google Safe Browsing API (بدون کلید)
+        print("\n🔍 Checking site status...")
+        
+        # چک کردن با استفاده از Google Safe Browsing (نیاز به API Key)
+        # برای سادگی، فقط یه بررسی اولیه انجام میدیم
+        try:
+            response = requests.get(url, timeout=5)
+            if response.status_code == 200:
+                print("✅ Site is reachable")
+            else:
+                print(f"⚠️ Site returned status: {response.status_code}")
+        except:
+            print("❌ Site is not reachable")
+            
+        # بررسی اولیه برای تشخیص سایت‌های فیشینگ (با لیست ساده)
+        suspicious_domains = [
+            "free-robux", "generator", "hack", "cheat", "free-vbucks",
+            "free-giftcard", "free-money", "roblox-free", "mod-apk"
+        ]
+        domain = urlparse(url).netloc.lower()
+        for word in suspicious_domains:
+            if word in domain:
+                print("⚠️ This site may be suspicious!")
+                return
+        print("✅ No obvious red flags found")
+        
+    except Exception as e:
+        print(f"❌ Status check failed: {e}")
+
+# ====== ۳. اجرا ======
+if __name__ == "__main__":
+    print("="*50)
+    print("🔐 SSL & Site Status Checker")
+    print("="*50)
+    
+    site = input("\n🌐 Enter website URL (e.g., example.com): ").strip()
+    if not site.startswith("http"):
+        site = "https://" + site
+    
+    print("\n" + "-"*50)
+    check_ssl_expiry(site)
+    check_site_status(site)
+    print("="*50)
